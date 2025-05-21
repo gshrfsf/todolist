@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>간단 투두 리스트</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f2f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 16px;
+      background-color: #4a90e2;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #357ABD;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      background: #f9fafb;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .todo-item.completed {
+      background-color: #e0f7e9;
+      text-decoration: line-through;
+      color: #777;
+    }
+
+    .todo-item input[type="checkbox"] {
+      margin-right: 12px;
+      transform: scale(1.2);
+    }
+
+    .todo-content {
+      flex-grow: 1;
+    }
+
+    .timestamp {
+      font-size: 0.8em;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📌 투두 리스트</h1>
+    <form id="todoForm">
+      <input type="text" id="todoInput" placeholder="할 일을 입력하세요" required />
+      <button type="submit">추가</button>
+    </form>
+    <ul id="todoList"></ul>
+  </div>
+
+  <script>
+    const form = document.getElementById('todoForm');
+    const input = document.getElementById('todoInput');
+    const list = document.getElementById('todoList');
+    const STORAGE_KEY = 'todoItems';
+
+    // 데이터 불러오기
+    function loadTodos() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    }
+
+    // 데이터 저장
+    function saveTodos(todos) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+
+    // UI에 항목 추가
+    function renderTodos() {
+      list.innerHTML = '';
+      const todos = loadTodos();
+      todos.forEach((todo, index) => {
+        const li = document.createElement('li');
+        li.className = 'todo-item' + (todo.completed ? ' completed' : '');
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = todo.completed;
+        checkbox.addEventListener('change', () => {
+          todo.completed = checkbox.checked;
+          saveTodos(todos);
+          renderTodos();
+        });
+
+        const content = document.createElement('div');
+        content.className = 'todo-content';
+        content.innerHTML = `<strong>${todo.text}</strong><div class="timestamp">${todo.timestamp}</div>`;
+
+        li.appendChild(checkbox);
+        li.appendChild(content);
+        list.appendChild(li);
+      });
+    }
+
+    // 새 항목 추가
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (text === '') return;
+
+      const todos = loadTodos();
+      const now = new Date();
+      todos.unshift({
+        text: text,
+        timestamp: now.toLocaleString(),
+        completed: false
+      });
+      saveTodos(todos);
+      input.value = '';
+      renderTodos();
+    });
+
+    // 초기 렌더링
+    renderTodos();
+  </script>
+</body>
+</html>
