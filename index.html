@@ -2,13 +2,12 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>간단 투두 리스트</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>투두 리스트</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f2f4f8;
-      margin: 0;
+      background-color: #f0f2f5;
       padding: 20px;
     }
 
@@ -18,7 +17,7 @@
       background: white;
       padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     }
 
     h1 {
@@ -49,7 +48,6 @@
       font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
     }
 
     button:hover {
@@ -90,43 +88,55 @@
       font-size: 0.8em;
       color: #888;
     }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #d33;
+      font-size: 1.2em;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .delete-btn:hover {
+      color: #a00;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>📌 투두 리스트</h1>
     <form id="todoForm">
-      <input type="text" id="todoInput" placeholder="할 일을 입력하세요" required />
+      <input type="text" id="todoInput" placeholder="할 일을 입력하세요 (예: 우유 사기)" required />
       <button type="submit">추가</button>
     </form>
     <ul id="todoList"></ul>
   </div>
 
   <script>
+    const STORAGE_KEY = 'todoItems';
+    const SECRET_CODE = '삭제폭탄';
+
     const form = document.getElementById('todoForm');
     const input = document.getElementById('todoInput');
     const list = document.getElementById('todoList');
-    const STORAGE_KEY = 'todoItems';
 
-    // 데이터 불러오기
     function loadTodos() {
       const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     }
 
-    // 데이터 저장
     function saveTodos(todos) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
     }
 
-    // UI에 항목 추가
     function renderTodos() {
       list.innerHTML = '';
       const todos = loadTodos();
       todos.forEach((todo, index) => {
         const li = document.createElement('li');
         li.className = 'todo-item' + (todo.completed ? ' completed' : '');
-        
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = todo.completed;
@@ -140,17 +150,36 @@
         content.className = 'todo-content';
         content.innerHTML = `<strong>${todo.text}</strong><div class="timestamp">${todo.timestamp}</div>`;
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '🗑';
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.title = '삭제';
+        deleteBtn.addEventListener('click', () => {
+          todos.splice(index, 1);
+          saveTodos(todos);
+          renderTodos();
+        });
+
         li.appendChild(checkbox);
         li.appendChild(content);
+        li.appendChild(deleteBtn);
         list.appendChild(li);
       });
     }
 
-    // 새 항목 추가
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const text = input.value.trim();
       if (text === '') return;
+
+      // 비밀코드 입력 시 전체 삭제
+      if (text === SECRET_CODE) {
+        localStorage.removeItem(STORAGE_KEY);
+        alert('💥 삭제폭탄 발동! 모든 항목이 삭제되었습니다.');
+        input.value = '';
+        renderTodos();
+        return;
+      }
 
       const todos = loadTodos();
       const now = new Date();
@@ -164,7 +193,6 @@
       renderTodos();
     });
 
-    // 초기 렌더링
     renderTodos();
   </script>
 </body>
